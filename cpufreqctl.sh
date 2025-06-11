@@ -179,11 +179,11 @@ set_governor_all() {
   fi
   echo -e "${BLUE}Choose CPU governor:${NC}"
   for i in "${!GOVS[@]}"; do printf "  %d) %s\n" $((i+1)) "${GOVS[i]}"; done
-  echo "  x) Cancel   exit) Quit"
+  echo "  0) Back to main menu   exit) Quit"
   read -rp "Select: " idx
   case "$idx" in
     exit) echo "Goodbye!"; exit 0 ;;
-    x) return ;;
+    0) return ;;
   esac
   if [[ $idx =~ ^[0-9]+$ ]] && [ $idx -ge 1 ] && [ $idx -le ${#GOVS[@]} ]; then
     choice=${GOVS[$((idx-1))]}
@@ -206,21 +206,22 @@ cap_to_percent_all() {
   echo -e "${BLUE}Current CPU max frequency:${NC}"
   printf "  ${YELLOW}%d MHz${NC} (${GREEN}%d%%${NC} of max)\n" "$capmhz" "$pct"
   echo
-  echo -e "${BLUE}Enter cap percentage [1-100]:${NC}"
-  echo "  x) Cancel   exit) Quit"
-  read -rp "Percent: " npct
+  echo -e "${BLUE}Enter cap percentage [20-100]:${NC}"
+  echo "  0) Back to main menu   exit) Quit"
+  read -rp "Percent (20-100, 0=back, exit=quit): " npct
   case "$npct" in
     exit) echo "Goodbye!"; exit 0 ;;
-    x) return ;;
+    0) return ;;
   esac
-  if [[ $npct =~ ^[0-9]+$ ]] && [ $npct -ge 1 ] && [ $npct -le 100 ]; then
-    target=$(( max * npct / 100 ))
-    for p in "${POLICIES[@]}"; do echo "$target" | sudo tee "$p"/scaling_max_freq >/dev/null; done
-    echo -e "${GREEN}CPU capped to $npct% ($((target/1000)) MHz).${NC}"
-  else
-    echo -e "${RED}Invalid percentage${NC}"
-  fi
-  pause
+  if [[ $npct =~ ^[0-9]+$ ]] && [ $npct -ge 20 ] && [ $npct -le 100 ]; then
+  target=$(awk "BEGIN { printf \"%d\", ($max * $npct / 100) + 0.5 }")
+  for p in "${POLICIES[@]}"; do echo "$target" | sudo tee "$p"/scaling_max_freq >/dev/null; done
+  echo -e "${GREEN}CPU capped to $npct% ($((target/1000)) MHz).${NC}"
+else
+  echo -e "${RED}Invalid percentage. Minimum allowed is 20%.${NC}"
+fi
+pause
+
 }
 
 show_advanced_stats() {
@@ -244,7 +245,7 @@ show_advanced_stats() {
     cap=$(< "$p"/scaling_max_freq)
     maxmhz=$((max/1000))
     capmhz=$((cap/1000))
-    pct=$(( cap * 100 / max ))
+    pct=$(awk "BEGIN { printf \"%d\", ($cap * 100 / $max) + 0.5 }")
     printf "  ${YELLOW}%-8s${NC}  Gov: ${GREEN}%-12s${NC}  Cap: ${GREEN}%4d MHz${NC} (%d%% of %d MHz max)\n" "$name" "$gov" "$capmhz" "$pct" "$maxmhz"
   done
   echo

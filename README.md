@@ -8,11 +8,23 @@ cpufreqctl is an interactive, user-friendly CPU governor and frequency control t
 * Save and restore your system’s original settings
 * View advanced stats (for geeks)
 
-## Key Features
+---
 
-* **Safe:** Never hardcodes system defaults. The first time you save defaults, they are stored in `~/.cpufreqctl.defaults` and can be restored at any time.
-* **Universal:** Works on most modern Linux systems, supports Intel and AMD CPUs, and shows available governors and sensors.
-* **User-focused:** All major actions apply to all cores by default—no jargon. Advanced info is available but never forced.
+## Installation
+
+To install system-wide (recommended), run:
+
+```bash
+./install.sh
+```
+
+This will copy `cpufreqctl.sh` to `/usr/local/bin/cpufreqctl` and make it executable. You can then run `cpufreqctl` from anywhere.
+
+If you prefer not to install, you can run locally without installation:
+
+```bash
+./cpufreqctl.sh
+```
 
 ---
 
@@ -21,7 +33,7 @@ cpufreqctl is an interactive, user-friendly CPU governor and frequency control t
 Just run:
 
 ```bash
-./cpufreqctl
+cpufreqctl
 ```
 
 ### Menu options
