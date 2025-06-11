@@ -4,7 +4,7 @@ cpufreqctl is an interactive, user-friendly CPU governor and frequency control t
 
 **Disclaimer:** Use at your own risk. While cpufreqctl does not make changes unless you explicitly confirm them, modifying CPU settings can impact system stability and performance. No guarantee is provided for compatibility or safety on all systems.
 
----
+
 
 ## Features
 
@@ -14,13 +14,13 @@ cpufreqctl is an interactive, user-friendly CPU governor and frequency control t
 * Save and restore your system’s original settings (defaults stored per user)
 * Advanced stats and sensor info for power users ("Geek menu")
 
----
+
 
 ## How does it work?
 
 cpufreqctl interacts directly with Linux sysfs (`/sys/devices/system/cpu/cpufreq/...`) and standard tools like `awk`, `sudo`, and `bash`. It reads available governors, scaling frequencies, and sensor data from the kernel, making no assumptions about your hardware or distribution. Actions requiring changes (like setting a governor) use `sudo` for safety but the menu can be used as a normal user.
 
----
+
 
 ## Requirements
 
@@ -30,7 +30,7 @@ cpufreqctl interacts directly with Linux sysfs (`/sys/devices/system/cpu/cpufreq
 * awk
 * Sensors (for temperature readout; works best with coretemp, k10temp, etc.)
 
----
+
 
 ## Installation
 
@@ -48,7 +48,7 @@ If you prefer not to install, you can run locally without installation:
 ./cpufreqctl.sh
 ```
 
----
+
 
 ## Usage
 
@@ -78,7 +78,7 @@ cpufreqctl
    * View saved defaults
    * Overwrite saved defaults
 
----
+
 
 ## Restoring defaults
 
@@ -86,7 +86,7 @@ The restore feature is designed to let you revert to a previously saved configur
 
 For restoration to work, a valid defaults file must exist in your home directory—this file is only created when you use the save command (option 5 > save). Restoring may not succeed if the file is missing, has been changed, or is incompatible with your current system or kernel.
 
----
+
 
 ## Notes
 
@@ -95,19 +95,19 @@ For restoration to work, a valid defaults file must exist in your home directory
 * All actions affect every CPU core/policy by default. Advanced per-policy or per-core settings are shown only in the geek/debug stats.
 * CPU temperature is auto-detected and will always prioritize the real CPU sensor (e.g. k10temp/coretemp), falling back to the first available temp sensor if needed.
 
----
+
 
 ## License
 
 MIT
 
----
+
 
 ## Author
 
 * David Campbell
 
----
+
 
 For suggestions, improvements, or issues, open a pull request or contact David.
 
