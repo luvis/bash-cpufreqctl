@@ -1,12 +1,34 @@
 # cpufreqctl
 
-cpufreqctl is an interactive, user-friendly CPU governor and frequency control tool for Linux. It allows you to:
+cpufreqctl is an interactive, user-friendly CPU governor and frequency control tool for Linux systems using the kernel's `cpufreq` interface via sysfs. It lets you monitor and control CPU scaling, governors, and frequency caps from the terminal. The tool was developed on openSUSE but should work on most modern Linux distributions. Advanced details and sensor readouts are available for deeper analysis.
 
-* View CPU details and current scaling status
+**Disclaimer:** Use at your own risk. While cpufreqctl does not make changes unless you explicitly confirm them, modifying CPU settings can impact system stability and performance. No guarantee is provided for compatibility or safety on all systems.
+
+---
+
+## Features
+
+* View CPU details, scaling status, and temperature (auto-detected for most CPUs)
 * Set the CPU governor (e.g. performance, powersave)
-* Cap the maximum CPU frequency as a percentage
-* Save and restore your system’s original settings
-* View advanced stats (for geeks)
+* Cap the maximum CPU frequency as a percentage (minimum enforced)
+* Save and restore your system’s original settings (defaults stored per user)
+* Advanced stats and sensor info for power users ("Geek menu")
+
+---
+
+## How does it work?
+
+cpufreqctl interacts directly with Linux sysfs (`/sys/devices/system/cpu/cpufreq/...`) and standard tools like `awk`, `sudo`, and `bash`. It reads available governors, scaling frequencies, and sensor data from the kernel, making no assumptions about your hardware or distribution. Actions requiring changes (like setting a governor) use `sudo` for safety but the menu can be used as a normal user.
+
+---
+
+## Requirements
+
+* Bash (any recent version)
+* Linux with kernel cpufreq/sysfs interface (most desktop/laptop distros)
+* sudo (for system changes)
+* awk
+* Sensors (for temperature readout; works best with coretemp, k10temp, etc.)
 
 ---
 
@@ -46,7 +68,7 @@ cpufreqctl
    * Choose from available governors. Applies your choice to all CPU cores.
 3. **Cap CPU max frequency**
 
-   * Cap the max CPU speed as a percent of the hardware maximum.
+   * Cap the max CPU speed as a percent of the hardware maximum (minimum allowed is 20%).
 4. **Geek stats/debug info**
 
    * Shows all policy groups, governors, caps, and all temp sensors for deeper analysis.
@@ -60,15 +82,9 @@ cpufreqctl
 
 ## Restoring defaults
 
-If you’ve saved defaults (option 5 > save), you can restore them any time from the defaults menu. Defaults are stored in your home directory as `~/.cpufreqctl.defaults` and only updated if you explicitly save/overwrite.
+The restore feature is designed to let you revert to a previously saved configuration using the defaults menu. It works by loading settings from the `~/.cpufreqctl.defaults` file and applying them to your system.
 
----
-
-## Requirements
-
-* Bash
-* Linux with sysfs CPU frequency support
-* sudo (for making changes)
+For restoration to work, a valid defaults file must exist in your home directory—this file is only created when you use the save command (option 5 > save). Restoring may not succeed if the file is missing, has been changed, or is incompatible with your current system or kernel.
 
 ---
 
