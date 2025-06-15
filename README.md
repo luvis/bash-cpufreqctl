@@ -4,7 +4,19 @@ cpufreqctl is an interactive, user-friendly CPU governor and frequency control t
 
 **Disclaimer:** Use at your own risk. While cpufreqctl does not make changes unless you explicitly confirm them, modifying CPU settings can impact system stability and performance. No guarantee is provided for compatibility or safety on all systems.
 
+## Screenshots
 
+### Main Menu
+![Main Menu](docs/screenshots/main-menu.png)
+
+### CPU Status
+![CPU Status](docs/screenshots/cpu-stats.png)
+
+### Governor Selection
+![Governor Selection](docs/screenshots/governor.png)
+
+### Set Cpu Cap
+![CPU Cap](docs/screenshots/cpu-cap.png)
 
 ## Features
 
@@ -26,7 +38,7 @@ cpufreqctl interacts directly with Linux sysfs (`/sys/devices/system/cpu/cpufreq
 
 ## Requirements
 
-* Bash (any recent version)
+* Any modern shell (bash, zsh, fish, ksh, tcsh, dash, ash)
 * Linux with kernel cpufreq/sysfs interface (most desktop/laptop distros)
 * sudo (for system changes)
 * awk
@@ -38,15 +50,27 @@ cpufreqctl interacts directly with Linux sysfs (`/sys/devices/system/cpu/cpufreq
 
 To install system-wide (recommended), run:
 
-```bash
+```shell
 ./install.sh
 ```
 
-This will copy `cpufreqctl.sh` to `/usr/local/bin/cpufreqctl` and make it executable. You can then run `cpufreqctl` from anywhere.
+This will:
+1. Copy `cpufreqctl.sh` to `/usr/local/bin/cpufreqctl` and make it executable
+2. Detect your current shell and configure it appropriately
+3. Add `/usr/local/bin` to your PATH if needed
+4. Create necessary configuration files for future shell compatibility
+
+The installation script will:
+- Work with any supported shell (bash, zsh, fish, ksh, tcsh, dash, ash)
+- Create a `.profile` file for system compatibility
+- Configure your shell's startup files appropriately
+- Verify the installation was successful
+
+You can then run `cpufreqctl` from anywhere.
 
 If you prefer not to install, you can run locally without installation:
 
-```bash
+```shell
 ./cpufreqctl.sh
 ```
 
@@ -56,7 +80,7 @@ If you prefer not to install, you can run locally without installation:
 
 Just run:
 
-```bash
+```shell
 cpufreqctl
 ```
 
@@ -92,7 +116,7 @@ cpufreqctl can also be used non-interactively from the command line for scriptin
 
 ### CLI Usage
 
-```bash
+```shell
 cpufreqctl [OPTIONS]
 ```
 
@@ -119,7 +143,7 @@ cpufreqctl [OPTIONS]
 
 **Examples:**
 
-```bash
+```shell
 cpufreqctl --status
 cpufreqctl --list
 cpufreqctl --apply powersave
@@ -157,5 +181,5 @@ MIT
 
 * David Campbell
 
-For suggestions, improvements, or issues, open a pull request or contact David.
+For suggestions, improvements, or issues, open a pull request or contact me.
 

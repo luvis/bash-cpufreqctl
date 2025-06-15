@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cpufreqctl-clean.sh — Clean, Modern CPU Power Tool with Profile Support
+# cpufreqctl.sh — Clean, Modern CPU Power Tool with Profile Support
 
 # --- Color Codes ---
 RED='\033[0;31m'
@@ -13,6 +13,16 @@ PROFILE_DIR="$HOME/.cpufreqctl-profiles"
 DEFAULT_PROFILE="default"
 MAX_LOG_ENTRIES=8
 declare -a ACTION_LOG
+
+# --- Padding Settings ---
+TOP_PADDING=2
+LEFT_PADDING="    "  # Four spaces
+
+pad() {
+    while IFS= read -r line; do
+        echo "${LEFT_PADDING}${line}"
+    done
+}
 
 # --- Utility Functions ---
 echo_and_log() {
@@ -33,13 +43,14 @@ log_action() {
 
 display_header() {
     clear
-    echo -e "${BLUE}CPU Frequency & Governor Tool${NC}"
+    for ((i=0; i<TOP_PADDING; i++)); do echo; done
+    echo -e "${BLUE}CPU Frequency & Governor Tool${NC}" | pad
     if ((${#ACTION_LOG[@]} > 0)); then
-        echo -e "${YELLOW}Log:${NC}"
+        echo -e "${YELLOW}Log:${NC}" | pad
         local box_width=100
         local border=""
         for ((i=0; i<box_width; i++)); do border+="─"; done
-        echo -e "${BLUE}┌${border}┐${NC}"
+        echo -e "${BLUE}┌${border}┐${NC}" | pad
         for ((i=${#ACTION_LOG[@]}-1; i>=0; i--)); do
             local entry="${ACTION_LOG[i]}"
             local plain_entry
@@ -50,9 +61,9 @@ display_header() {
             else
                 entry="$entry$(printf '%*s' $((box_width - len)) '')"
             fi
-            printf "${BLUE}│${NC}%s${BLUE}│${NC}\n" "$entry"
+            printf "${BLUE}│${NC}%s${BLUE}│${NC}\n" "$entry" | pad
         done
-        echo -e "${BLUE}└${border}┘${NC}"
+        echo -e "${BLUE}└${border}┘${NC}" | pad
     fi
 }
 
@@ -223,7 +234,7 @@ set_default_profile() {
     fi
     if [[ -f "$(profile_file "$DEFAULT_PROFILE")" && "$force" != "--force" ]]; then
         echo -e "${YELLOW}Warning:${NC} This will overwrite the current default profile!"
-        read -rp "Are you sure you want to overwrite the default profile with '$src'? [y/N]: " ans
+        read -rp "${LEFT_PADDING}Are you sure you want to overwrite the default profile with '$src'? [y/N]: " ans
         [[ "${ans,,}" =~ ^y ]] || { echo "Aborted."; return 1; }
     fi
     cp "$(profile_file "$src")" "$(profile_file "$DEFAULT_PROFILE")" && echo_and_log "Set default profile" "cp $src $DEFAULT_PROFILE" "Set '$src' as default."
@@ -319,8 +330,8 @@ parse_cli() {
 # --- Interactive UI ---
 show_simple_status() {
     display_header
-    echo -e "${BLUE}\033[1m1) Show CPU status${NC}"
-    echo
+    echo -e "${BLUE}\033[1m1) Show CPU status${NC}" | pad
+    echo | pad
     vendor=$(awk -F: '/vendor_id/ {print $2; exit}' /proc/cpuinfo | xargs)
     model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | xargs)
     cores=$(get_cores)
@@ -330,113 +341,103 @@ show_simple_status() {
     max=$(< "${POLICIES[0]}/cpuinfo_max_freq")
     capmhz=$((cap/1000)); maxmhz=$((max/1000)); pct=$(( cap * 100 / max ))
     cpu_temp=$(get_simple_cpu_temp)
-    # Log all commands and outputs for status
-    log_action "Running: cat /sys/devices/system/cpu/cpu*/cpufreq/policy*/scaling_governor"
-    log_action "Output: governor=$gov"
-    log_action "Running: cat /sys/devices/system/cpu/cpu*/cpufreq/policy*/scaling_max_freq"
-    log_action "Output: cap=$cap"
-    log_action "Running: cat /sys/devices/system/cpu/cpu*/cpufreq/policy*/cpuinfo_max_freq"
-    log_action "Output: max=$max"
-    log_action "Running: get_simple_cpu_temp"
-    log_action "Output: cpu_temp=$cpu_temp"
-    echo -e "${BLUE}CPU Status:${NC}"
-    echo -e "  ${YELLOW}Vendor   :${NC} $vendor"
-    echo -e "  ${YELLOW}Model    :${NC} $model"
-    echo -e "  ${YELLOW}Cores    :${NC} $cores"
-    echo -e "  ${YELLOW}Threads  :${NC} $threads"
-    echo -e "  ${YELLOW}Governor :${NC} ${GREEN}$gov${NC}"
-    echo -e "  ${YELLOW}Max Freq :${NC} ${GREEN}$capmhz MHz ($pct%% of max)${NC}"
+    echo -e "${BLUE}CPU Status:${NC}" | pad
+    echo -e "  ${YELLOW}Vendor   :${NC} $vendor" | pad
+    echo -e "  ${YELLOW}Model    :${NC} $model" | pad
+    echo -e "  ${YELLOW}Cores    :${NC} $cores" | pad
+    echo -e "  ${YELLOW}Threads  :${NC} $threads" | pad
+    echo -e "  ${YELLOW}Governor :${NC} ${GREEN}$gov${NC}" | pad
+    echo -e "  ${YELLOW}Max Freq :${NC} ${GREEN}$capmhz MHz ($pct%% of max)${NC}" | pad
     if [[ -n "$cpu_temp" ]]; then
-        echo -e "  ${YELLOW}Temp     :${NC} $cpu_temp"
+        echo -e "  ${YELLOW}Temp     :${NC} $cpu_temp" | pad
     fi
-    echo
-    read -rp "Press Enter to return to main menu..." x
-    [[ "${x,,}" == "exit" ]] && echo "Bye!" && exit 0
+    echo | pad
+    read -rp "${LEFT_PADDING}Press Enter to return to main menu..." x
+    [[ "${x,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
 }
 
 set_governor_all() {
     display_header
-    echo -e "${BLUE}\033[1m2) Set CPU governor${NC}"
-    echo
-    # Split governors into array
+    echo -e "${BLUE}\033[1m2) Set CPU governor${NC}" | pad
+    echo | pad
     GOVS=()
     if [[ -r "${POLICIES[0]}/scaling_available_governors" ]]; then
         read -ra GOVS < "${POLICIES[0]}/scaling_available_governors"
     fi
     gov_now=$(<"${POLICIES[0]}/scaling_governor")
-    echo -e "${BLUE}Current governor:${NC} ${GREEN}$gov_now${NC}"
-    echo
+    echo -e "${BLUE}Current governor:${NC} ${GREEN}$gov_now${NC}" | pad
+    echo | pad
     if ((${#GOVS[@]}==0)); then
-        echo "No governors available on this system."
-        read -rp "Press Enter to return to main menu..." x
-        [[ "${x,,}" == "exit" ]] && echo "Bye!" && exit 0
+        echo "No governors available on this system." | pad
+        read -rp "${LEFT_PADDING}Press Enter to return to main menu..." x
+        [[ "${x,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
         return
     fi
-    echo "Choose CPU governor:"
+    echo "Choose CPU governor:" | pad
     for i in "${!GOVS[@]}"; do 
         if [[ "${GOVS[i]}" == "$gov_now" ]]; then
-            printf "  %d) ${GREEN}%s${NC}\n" $((i+1)) "${GOVS[i]}"
+            printf "  %d) ${GREEN}%s${NC}\n" $((i+1)) "${GOVS[i]}" | pad
         else
-            printf "  %d) %s\n" $((i+1)) "${GOVS[i]}"
+            printf "  %d) %s\n" $((i+1)) "${GOVS[i]}" | pad
         fi
     done
-    echo "  0) Back to main menu"
-    read -rp "Select: " idx
-    [[ "${idx,,}" == "exit" ]] && echo "Bye!" && exit 0
+    echo "  0) Back to main menu" | pad
+    read -rp "${LEFT_PADDING}Select: " idx
+    [[ "${idx,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
     case "$idx" in
-        exit) echo "Goodbye!"; exit 0 ;;
+        exit) echo "Goodbye!" | pad; exit 0 ;;
         0) return ;;
     esac
     if [[ $idx =~ ^[0-9]+$ ]] && [ $idx -ge 1 ] && [ $idx -le ${#GOVS[@]} ]; then
         set_governor "${GOVS[$((idx-1))]}"
     else
-        echo "Invalid choice"
+        echo "Invalid choice" | pad
     fi
-    read -rp "Press Enter to return to main menu..." x
-    [[ "${x,,}" == "exit" ]] && echo "Bye!" && exit 0
+    read -rp "${LEFT_PADDING}Press Enter to return to main menu..." x
+    [[ "${x,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
 }
 
 cap_to_percent_all() {
     display_header
-    echo -e "${BLUE}\033[1m3) Cap CPU max frequency${NC}"
-    echo
+    echo -e "${BLUE}\033[1m3) Cap CPU max frequency${NC}" | pad
+    echo | pad
     cap=$(< "${POLICIES[0]}/scaling_max_freq")
     max=$(< "${POLICIES[0]}/cpuinfo_max_freq")
     capmhz=$((cap/1000))
     maxmhz=$((max/1000))
     pct=$(( cap * 100 / max ))
-    echo -e "${YELLOW}Current CPU max frequency:${NC}"
-    printf "  ${GREEN}%d MHz${NC} (${GREEN}%d%%${NC} of max)\n" "$capmhz" "$pct"
-    echo
-    echo "  0) Back to main menu"
-    echo
-    read -rp "Enter cap percentage [20-100]: " npct
-    [[ "${npct,,}" == "exit" ]] && echo "Bye!" && exit 0
+    echo -e "${YELLOW}Current CPU max frequency:${NC}" | pad
+    printf "  ${GREEN}%d MHz${NC} (${GREEN}%d%%${NC} of max)\n" "$capmhz" "$pct" | pad
+    echo | pad
+    echo "  0) Back to main menu" | pad
+    echo | pad
+    read -rp "${LEFT_PADDING}Enter cap percentage [20-100]: " npct
+    [[ "${npct,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
     case "$npct" in
-        exit) echo "Goodbye!"; exit 0 ;;
+        exit) echo "Goodbye!" | pad; exit 0 ;;
         0) return ;;
     esac
     set_cap "$npct"
-    read -rp "Press Enter to return to main menu..." x
-    [[ "${x,,}" == "exit" ]] && echo "Bye!" && exit 0
+    read -rp "${LEFT_PADDING}Press Enter to return to main menu..." x
+    [[ "${x,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
 }
 
 show_advanced_stats() {
     display_header
-    echo -e "${BLUE}\033[1m4) Geek stats/debug info${NC}"
-    echo
+    echo -e "${BLUE}\033[1m4) Geek stats/debug info${NC}" | pad
+    echo | pad
     vendor=$(awk -F: '/vendor_id/ {print $2; exit}' /proc/cpuinfo | xargs)
     model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | xargs)
     cores=$(get_cores)
     threads=$(get_threads)
-    echo -e "${BLUE}Geek/Debug Info: CPU Policies, Governors, Caps, and Sensors${NC}"
-    echo -e "${BLUE}(A policy is a group of CPUs that must share settings. Most users only need to set everything globally.)${NC}"
-    printf "  ${YELLOW}Vendor   :${NC} %s\n" "$vendor"
-    printf "  ${YELLOW}Model    :${NC} %s\n" "$model"
-    printf "  ${YELLOW}Cores    :${NC} %s\n" "$cores"
-    printf "  ${YELLOW}Threads  :${NC} %s\n" "$threads"
-    echo
-    echo -e "${GREEN}--- Policies (CPU groups) ---${NC}"
+    echo -e "${BLUE}Geek/Debug Info: CPU Policies, Governors, Caps, and Sensors${NC}" | pad
+    echo -e "${BLUE}(A policy is a group of CPUs that must share settings. Most users only need to set everything globally.)${NC}" | pad
+    printf "  ${YELLOW}Vendor   :${NC} %s\n" "$vendor" | pad
+    printf "  ${YELLOW}Model    :${NC} %s\n" "$model" | pad
+    printf "  ${YELLOW}Cores    :${NC} %s\n" "$cores" | pad
+    printf "  ${YELLOW}Threads  :${NC} %s\n" "$threads" | pad
+    echo | pad
+    echo -e "${GREEN}--- Policies (CPU groups) ---${NC}" | pad
     for p in "${POLICIES[@]}"; do
         name=$(basename "$p")
         gov=$(< "$p"/scaling_governor)
@@ -445,37 +446,35 @@ show_advanced_stats() {
         maxmhz=$((max/1000))
         capmhz=$((cap/1000))
         pct=$(awk "BEGIN { printf \"%d\", ($cap * 100 / $max) + 0.5 }")
-        printf "  ${YELLOW}%-8s${NC}  Gov: ${GREEN}%-12s${NC}  Cap: ${YELLOW}%4d MHz${NC} (${GREEN}%d%%${NC} of ${YELLOW}%d MHz${NC} max)\n" "$name" "$gov" "$capmhz" "$pct" "$maxmhz"
+        printf "  ${YELLOW}%-8s${NC}  Gov: ${GREEN}%-12s${NC}  Cap: ${YELLOW}%4d MHz${NC} (${GREEN}%d%%${NC} of ${YELLOW}%d MHz${NC} max)\n" "$name" "$gov" "$capmhz" "$pct" "$maxmhz" | pad
     done
-    echo
-    echo -e "${GREEN}--- Sensors (hwmon) ---${NC}"
+    echo | pad
+    echo -e "${GREEN}--- Sensors (hwmon) ---${NC}" | pad
     for hw in /sys/class/hwmon/hwmon*; do
         hwname=$(cat "$hw"/name 2>/dev/null || basename "$hw")
         for f in "$hw"/temp*_input; do [ -r "$f" ] || continue
             temp=$(( $(<"$f")/1000 ))
-            printf "  ${YELLOW}%-12s${NC} : ${GREEN}%3d°C${NC}\n" "$hwname" "$temp"
+            printf "  ${YELLOW}%-12s${NC} : ${GREEN}%3d°C${NC}\n" "$hwname" "$temp" | pad
         done
     done
-    echo
-    read -rp "Press Enter to return to main menu..." x
-    [[ "${x,,}" == "exit" ]] && echo "Bye!" && exit 0
+    echo | pad
+    read -rp "${LEFT_PADDING}Press Enter to return to main menu..." x
+    [[ "${x,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
 }
 
 profiles_menu() {
     while true; do
         display_header
-        echo -e "${BLUE}\033[1m5) Profiles menu${NC}"
-        echo
-        echo -e "${BLUE}Available profiles:${NC}"
+        echo -e "${BLUE}\033[1m5) Profiles menu${NC}" | pad
+        echo | pad
+        echo -e "${BLUE}Available profiles:${NC}" | pad
         shopt -s nullglob
-        # Try to detect the current profile by comparing current settings
         current_profile=""
         for pf in "$PROFILE_DIR"/*; do
             name=$(basename "$pf")
             match=true
             while IFS='|' read -r pol gov max; do
                 pdir="/sys/devices/system/cpu/cpu*/cpufreq/$pol"
-                # Check if current settings match this profile
                 for p in ${POLICIES[@]}; do
                     if [[ $(basename "$p") == "$pol" ]]; then
                         cur_gov=$(< "$p/scaling_governor")
@@ -491,52 +490,52 @@ profiles_menu() {
         for pf in "$PROFILE_DIR"/*; do
             name=$(basename "$pf")
             if [[ "$name" == "$current_profile" ]]; then
-                echo -e "  - ${GREEN}$name (current)${NC}"
+                echo -e "  - ${GREEN}$name (current)${NC}" | pad
             else
-                echo -e "  - $name"
+                echo -e "  - $name" | pad
             fi
         done
         shopt -u nullglob
-        echo
-        echo "  1) Save current as new profile"
-        echo "  2) Apply (set) a profile"
-        echo "  3) Delete a profile"
-        echo "  4) Save current as default profile"
-        echo "  0) Back to main menu"
-        echo
-        read -rp "Select: " c
-        [[ "${c,,}" == "exit" ]] && echo "Bye!" && exit 0
+        echo | pad
+        echo "  1) Save current as new profile" | pad
+        echo "  2) Apply (set) a profile" | pad
+        echo "  3) Delete a profile" | pad
+        echo "  4) Save current as default profile" | pad
+        echo "  0) Back to main menu" | pad
+        echo | pad
+        read -rp "${LEFT_PADDING}Select: " c
+        [[ "${c,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
         case "$c" in
             1)
-                read -rp "Enter profile name to save (a-z, 0-9, _, -): " pname
-                [[ "${pname,,}" == "exit" ]] && echo "Bye!" && exit 0
-                [[ -z "$pname" ]] && echo "Profile name required." && continue
+                read -rp "${LEFT_PADDING}Enter profile name to save (a-z, 0-9, _, -): " pname
+                [[ "${pname,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
+                [[ -z "$pname" ]] && echo "Profile name required." | pad && continue
                 if profile_exists "$pname"; then
-                    echo "Profile '$pname' already exists. Use 'Overwrite profile' to update it."
+                    echo "Profile '$pname' already exists. Use 'Overwrite profile' to update it." | pad
                     continue
                 fi
                 save_profile "$pname"
                 ;;
             2)
-                echo -e "${YELLOW}Type the profile name from the list above to apply:${NC}"
-                read -rp "Enter profile name to apply: " pname
-                [[ "${pname,,}" == "exit" ]] && echo "Bye!" && exit 0
+                echo -e "${YELLOW}Type the profile name from the list above to apply:${NC}" | pad
+                read -rp "${LEFT_PADDING}Enter profile name to apply: " pname
+                [[ "${pname,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
                 if ! profile_exists "$pname"; then
-                    echo "No profile named '$pname' found."
+                    echo "No profile named '$pname' found." | pad
                     continue
                 fi
                 apply_profile "$pname"
                 ;;
             3)
-                echo -e "${YELLOW}Type the profile name from the list above to delete:${NC}"
-                read -rp "Enter profile name to delete: " pname
-                [[ "${pname,,}" == "exit" ]] && echo "Bye!" && exit 0
+                echo -e "${YELLOW}Type the profile name from the list above to delete:${NC}" | pad
+                read -rp "${LEFT_PADDING}Enter profile name to delete: " pname
+                [[ "${pname,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
                 delete_profile "$pname"
                 ;;
             4)
-                echo -e "${YELLOW}Warning:${NC} This will overwrite the current default profile!"
-                read -rp "Are you sure you want to overwrite the default profile? [y/N]: " ans
-                [[ "${ans,,}" =~ ^y ]] || { echo "Aborted."; continue; }
+                echo -e "${YELLOW}Warning:${NC} This will overwrite the current default profile!" | pad
+                read -rp "${LEFT_PADDING}Are you sure you want to overwrite the default profile? [y/N]: " ans
+                [[ "${ans,,}" =~ ^y ]] || { echo "Aborted." | pad; continue; }
                 save_profile "$DEFAULT_PROFILE"
                 echo_and_log "Set default profile" "save current as $DEFAULT_PROFILE" "Current settings saved as default profile."
                 ;;
@@ -544,7 +543,7 @@ profiles_menu() {
                 break
                 ;;
             *)
-                echo "Invalid choice."
+                echo "Invalid choice." | pad
                 ;;
         esac
     done
@@ -553,26 +552,26 @@ profiles_menu() {
 main_menu() {
     while true; do
         display_header
-        echo -e "${BLUE}\033[1mMain Menu${NC}"
-        echo
-        echo -e "\033[1m1) Show CPU status${NC}"
-        echo -e "\033[1m2) Set CPU governor${NC}"
-        echo -e "\033[1m3) Cap CPU max frequency${NC}"
-        echo -e "\033[1m4) Geek stats/debug info${NC}"
-        echo -e "\033[1m5) Profiles menu${NC}"
-        echo -e "\033[1m0) Exit${NC}"
-        echo
-        read -rp "Select: " c
-        [[ "${c,,}" == "exit" ]] && echo "Bye!" && exit 0
+        echo -e "${BLUE}\033[1mMain Menu${NC}" | pad
+        echo | pad
+        echo -e "\033[1m1) Show CPU status${NC}" | pad
+        echo -e "\033[1m2) Set CPU governor${NC}" | pad
+        echo -e "\033[1m3) Cap CPU max frequency${NC}" | pad
+        echo -e "\033[1m4) Geek stats/debug info${NC}" | pad
+        echo -e "\033[1m5) Profiles menu${NC}" | pad
+        echo -e "\033[1m0) Exit${NC}" | pad
+        echo | pad
+        read -rp "${LEFT_PADDING}Select: " c
+        [[ "${c,,}" == "exit" ]] && echo "Bye!" | pad && exit 0
         case "$c" in
             1) show_simple_status ;;
             2) set_governor_all ;;
             3) cap_to_percent_all ;;
             4) show_advanced_stats ;;
             5) profiles_menu ;;
-            0|exit) echo "Bye!"; exit 0 ;;
+            0|exit) echo "Bye!" | pad; exit 0 ;;
             *) 
-                echo "Invalid choice"
+                echo "Invalid choice" | pad
                 sleep 1
                 ;;
         esac
